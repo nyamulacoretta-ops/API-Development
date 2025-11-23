@@ -11,8 +11,8 @@ app = FastAPI()
 class Post(BaseModel):
     title: str
     content: str
-    published: bool = False
     rating: Optional[float] = None
+
 
 #array
 my_posts = [
@@ -29,6 +29,7 @@ async def root():
 
 @app.get("/posts")
 def get_posts():
+    print(my_posts)
     return {"data": my_posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
@@ -62,6 +63,28 @@ def get_post(id: int, response: Response):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post with {id} not found")
     return {"data": post}
 #to get latest post
+
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int, response: Response):
+    post = find_post(id)
+    if post:
+        my_posts.remove(post)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post with {id} not found")
+    #return{"message": "post with {id} was deleted".format(id=id)}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    post_dict = find_post(id)
+    updated_post = post.dict(exclude_unset=True)
+    if not post_dict:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post with {id} not found")
+    else:
+       post_dict.update(updated_post)
+
+    return {"message": "Updated post with {id}".format(id=id)}
+
 
 
 
